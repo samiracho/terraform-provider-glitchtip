@@ -41,10 +41,3 @@ func testAccPreCheck(t *testing.T) {
 func testAccClient() *client.Client {
 	return client.New(os.Getenv("GLITCHTIP_ENDPOINT"), os.Getenv("GLITCHTIP_TOKEN"))
 }
-
-// testAccOrg returns the organization slug acceptance tests should create
-// resources under. Tests that need an organization create one; tests for
-// org-scoped resources may reuse GLITCHTIP_TEST_ORGANIZATION when set.
-func testAccOrg() string {
-	return os.Getenv("GLITCHTIP_TEST_ORGANIZATION")
-}

@@ -93,7 +93,7 @@ func TestProjectModelFromAPI(t *testing.T) {
 			if got.DateCreated.ValueString() != tc.out.DateCreated {
 				t.Fatalf("date_created = %q, want %q", got.DateCreated.ValueString(), tc.out.DateCreated)
 			}
-			if got.EventThrottleRate.ValueInt64() != int64(tc.out.EventThrottleRate) {
+			if got.EventThrottleRate.ValueInt64() != tc.out.EventThrottleRate {
 				t.Fatalf("event_throttle_rate = %d, want %d", got.EventThrottleRate.ValueInt64(), tc.out.EventThrottleRate)
 			}
 			if tc.out.Platform == nil {

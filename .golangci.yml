@@ -10,6 +10,13 @@ linters:
     - misspell
     - unconvert
     - gosec
+  exclusions:
+    rules:
+      # Test fixtures use fake DSNs with embedded credentials.
+      - path: _test\.go
+        linters:
+          - gosec
+        text: G101
 
 issues:
   max-issues-per-linter: 0
