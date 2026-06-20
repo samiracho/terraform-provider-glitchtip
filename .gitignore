@@ -1,0 +1,33 @@
+# Compiled binary
+terraform-provider-glitchtip
+dist/
+
+# Go
+*.test
+*.out
+vendor/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+.terraformrc
+terraform.rc
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store

@@ -1,0 +1,61 @@
+name: Tests
+
+on:
+  pull_request:
+    paths-ignore:
+      - "README.md"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & unit test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - run: go mod download
+      - run: go build -v ./...
+      - run: go vet ./...
+      - name: Run unit tests
+        run: go test -v -cover ./...
+
+  lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+  docs:
+    name: Check docs are generated
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - run: go generate ./...
+      - name: Fail if docs are out of date
+        run: |
+          git diff --compact-summary --exit-code || \
+            (echo; echo "Unexpected difference in docs/ after 'go generate'. Run 'make docs' and commit."; exit 1)

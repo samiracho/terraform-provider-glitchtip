@@ -1,0 +1,53 @@
+# Ephemeral GlitchTip stack for running the provider's acceptance (e2e) tests.
+# Brought up and torn down by scripts/run-e2e.sh (or `make test-e2e`).
+#
+# Valkey/Redis is optional: with VALKEY_URL set to an empty string, GlitchTip
+# uses Postgres for the task queue and cache, so this stack is just Postgres +
+# an all-in-one GlitchTip web container. Set VALKEY_URL back to a redis:// URL
+# and add a valkey service if you want to test against that configuration.
+#
+# This is NOT a production configuration: it trusts all Postgres connections,
+# uses a throwaway SECRET_KEY, prints emails to the console, and opens user
+# registration so a test user/token can be minted automatically.
+name: glitchtip-tf-e2e
+
+x-environment: &env
+  DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+  VALKEY_URL: "" # Empty: use Postgres for the task queue and cache (no Valkey/Redis)
+  SECRET_KEY: e2e-not-secret-do-not-use-in-production
+  EMAIL_URL: consolemail://
+  GLITCHTIP_DOMAIN: http://localhost:${GLITCHTIP_HOST_PORT:-8000}
+  DEFAULT_FROM_EMAIL: e2e@example.com
+  SERVER_ROLE: all_in_one
+  ENABLE_OPEN_USER_REGISTRATION: "True"
+  ENABLE_ORGANIZATION_CREATION: "True"
+  ENABLE_OPENAPI: "True"
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    volumes:
+      - pg-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  web:
+    image: glitchtip/glitchtip:6
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *env
+    ports:
+      - "${GLITCHTIP_HOST_PORT:-8000}:8000"
+    volumes:
+      - uploads:/code/uploads
+
+volumes:
+  pg-data:
+  uploads:
