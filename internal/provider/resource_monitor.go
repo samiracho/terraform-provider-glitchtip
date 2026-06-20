@@ -310,11 +310,20 @@ func monitorInFromModel(m monitorResourceModel) monitorIn {
 	}
 }
 
-// monitorModelFromAPI converts an API response into the Terraform model.
-// organization and confirmationThreshold are not returned by the API
-// (confirmationThreshold is write-only) and are carried through from plan/state.
-// project_id round-trips: the API echoes the numeric project id as projectID.
+// monitorModelFromAPI converts an API response into the Terraform model. The
+// organization slug is not returned by the API and is carried through from
+// plan/state. project_id round-trips: the API echoes the numeric project id as
+// projectID.
+//
+// confirmation_threshold is write-only on GlitchTip 6 (accepted on create/update
+// but never echoed back), so it falls back to the value carried through from
+// plan/state. Newer releases that do return it take precedence, which lets a
+// refresh detect out-of-band drift. The API minimum is 1, so a returned 0 means
+// "absent" and triggers the fallback.
 func monitorModelFromAPI(out monitorOut, organization string, confirmationThreshold int64) monitorResourceModel {
+	if out.ConfirmationThreshold > 0 {
+		confirmationThreshold = out.ConfirmationThreshold
+	}
 	model := monitorResourceModel{
 		Organization:          types.StringValue(organization),
 		ID:                    types.Int64PointerValue(out.ID),

@@ -88,8 +88,10 @@ func (l *monitorListResource) List(ctx context.Context, req list.ListRequest, st
 				ID:           types.Int64PointerValue(item.ID),
 			})...)
 			if req.IncludeResource {
-				// confirmation_threshold is write-only and not returned by the
-				// API, so carry through the documented default of 1.
+				// confirmation_threshold is write-only on GlitchTip 6 (never
+				// returned), so fall back to the documented default of 1;
+				// monitorModelFromAPI honors the value on newer releases that do
+				// return it.
 				model := monitorModelFromAPI(item, org, 1)
 				result.Diagnostics.Append(result.Resource.Set(ctx, model)...)
 			}

@@ -53,9 +53,12 @@ func TestExpandAlertRecipients(t *testing.T) {
 		want []alertRecipientIn
 	}{
 		{
-			name: "nil yields nil",
+			// expandAlertRecipients must return a non-nil empty slice (not nil)
+			// for empty/absent input: GlitchTip returns HTTP 500 when the
+			// alertRecipients field is JSON null, so the body must carry [].
+			name: "nil yields non-nil empty slice",
 			in:   nil,
-			want: nil,
+			want: []alertRecipientIn{},
 		},
 		{
 			name: "email with empty url and no tags",
@@ -86,6 +89,11 @@ func TestExpandAlertRecipients(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			got := expandAlertRecipients(context.Background(), tc.in)
+			// The function must never return nil: GlitchTip 500s on a null
+			// alertRecipients body, so an empty list must serialize as [].
+			if got == nil {
+				t.Fatalf("expandAlertRecipients returned nil; must be a non-nil (possibly empty) slice")
+			}
 			if len(got) != len(tc.want) {
 				t.Fatalf("len(got)=%d want %d (%+v)", len(got), len(tc.want), got)
 			}

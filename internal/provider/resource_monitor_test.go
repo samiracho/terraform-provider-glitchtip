@@ -52,14 +52,15 @@ func TestMonitorModelFromAPI(t *testing.T) {
 		Timeout:               &timeout,
 		ExpectedStatus:        &expectedStatus,
 		ExpectedBody:          &expectedBody,
-		ConfirmationThreshold: 1,
+		ConfirmationThreshold: 0, // GlitchTip 6 omits this field, so it decodes to 0.
 		ProjectID:             &projectID,
 		IsUp:                  &isUp,
 		Created:               "2026-06-20T00:00:00Z",
 	}
 
-	// organization and confirmation_threshold are not returned by the API and
-	// must be carried through; project_id round-trips from the response.
+	// organization is not returned by the API and must be carried through.
+	// confirmation_threshold is absent (0) on GlitchTip 6, so the carried-through
+	// value wins; project_id round-trips from the response.
 	got := monitorModelFromAPI(out, "acme", 3)
 
 	if got.Organization.ValueString() != "acme" {
@@ -142,6 +143,26 @@ func TestMonitorModelFromAPI_Nulls(t *testing.T) {
 	}
 	if !got.ProjectID.IsNull() {
 		t.Fatalf("project_id should be null, got %+v", got.ProjectID)
+	}
+}
+
+// TestMonitorModelFromAPIConfirmationThresholdReturned covers GlitchTip releases
+// that DO echo confirmation_threshold back (unlike v6, which omits it): the API
+// value must take precedence over the carried-through plan/state value so a
+// refresh can detect out-of-band drift.
+func TestMonitorModelFromAPIConfirmationThresholdReturned(t *testing.T) {
+	t.Parallel()
+	out := monitorOut{
+		Name:                  "ct",
+		MonitorType:           "GET",
+		Interval:              60,
+		ConfirmationThreshold: 5, // API returned a value; it must win.
+		Created:               "2026-06-20T00:00:00Z",
+	}
+	got := monitorModelFromAPI(out, "acme", 1)
+	if got.ConfirmationThreshold.ValueInt64() != 5 {
+		t.Fatalf("confirmation_threshold = %d, want 5 (returned API value should win over carry-through)",
+			got.ConfirmationThreshold.ValueInt64())
 	}
 }
 
@@ -304,6 +325,39 @@ resource "glitchtip_monitor" "test" {
 					// expected_status was omitted; the default must be applied.
 					r.TestCheckResourceAttr("glitchtip_monitor.test", "expected_status", "200"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccMonitorResource_confirmationThreshold sets a non-default
+// confirmation_threshold. GlitchTip 6 accepts it on write but never returns it,
+// so the provider must carry the configured value through state; otherwise apply
+// fails with "provider produced inconsistent result after apply".
+func TestAccMonitorResource_confirmationThreshold(t *testing.T) {
+	rOrg := acctest.RandomWithPrefix("tf-acc-org")
+	rName := acctest.RandomWithPrefix("tf-acc-mon-ct")
+
+	r.Test(t, r.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMonitorDestroy,
+		Steps: []r.TestStep{
+			{
+				Config: providerConfig + fmt.Sprintf(`
+resource "glitchtip_organization" "test" {
+  name = %[1]q
+}
+
+resource "glitchtip_monitor" "test" {
+  organization           = glitchtip_organization.test.slug
+  name                   = %[2]q
+  monitor_type           = "Heartbeat"
+  interval               = 60
+  confirmation_threshold = 5
+}
+`, rOrg, rName),
+				Check: r.TestCheckResourceAttr("glitchtip_monitor.test", "confirmation_threshold", "5"),
 			},
 		},
 	})
