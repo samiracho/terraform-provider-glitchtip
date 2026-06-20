@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/samiracho/glitchip-terraform-provider/internal/client"
+	"github.com/samiracho/terraform-provider-glitchtip/internal/client"
 )
 
 // Ensure the implementation satisfies the expected interfaces.

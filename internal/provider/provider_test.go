@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
-	"github.com/samiracho/glitchip-terraform-provider/internal/client"
+	"github.com/samiracho/terraform-provider-glitchtip/internal/client"
 )
 
 // providerConfig is prepended to every acceptance test configuration. The

@@ -1,4 +1,4 @@
-module github.com/samiracho/glitchip-terraform-provider
+module github.com/samiracho/terraform-provider-glitchtip
 
 go 1.25.8
 

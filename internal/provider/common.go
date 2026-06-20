@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 
-	"github.com/samiracho/glitchip-terraform-provider/internal/client"
+	"github.com/samiracho/terraform-provider-glitchtip/internal/client"
 )
 
 // identityAttr is one resource-identity attribute name/value pair.

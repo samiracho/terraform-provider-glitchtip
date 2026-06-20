@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
-	"github.com/samiracho/glitchip-terraform-provider/internal/provider"
+	"github.com/samiracho/terraform-provider-glitchtip/internal/provider"
 )
 
 // Run the docs generation tool. Generates docs/ from schema descriptions and
